@@ -59,4 +59,48 @@ namespace :db do
 
     ViirsFireEvent.upsert_all(arr)
   end
+
+  desc "Seed military geoms"
+  task :seed_military_geometries => :environment do
+    remove_if_exists = <<-SQL
+      DROP TABLE IF EXISTS military_geometries;
+    SQL
+
+    ActiveRecord::Base.connection_pool.with_connection do
+      ActiveRecord::Base.connection.execute(remove_if_exists)
+    end
+
+    seed_query = <<-SQL
+CREATE TABLE military_geometries AS
+SELECT osm_id, 'line' AS geom_type, landuse, military, building, name, operator,
+       ST_Buffer(way, 0.0009)::geometry(Polygon, 4326) AS geom
+FROM public.planet_osm_line
+WHERE military IS NOT NULL OR building = 'military' OR landuse = 'military'
+ 
+UNION ALL
+ 
+SELECT osm_id, 'point' AS geom_type, landuse, military, building, name, operator,
+       ST_Buffer(way, 0.0009)::geometry(Polygon, 4326) AS geom
+FROM public.planet_osm_point
+WHERE military IS NOT NULL OR building = 'military' OR landuse = 'military'
+ 
+UNION ALL
+ 
+SELECT osm_id, 'polygon' AS geom_type, landuse, military, building, name, operator,
+       way::geometry(Polygon, 4326) AS geom
+FROM public.planet_osm_polygon
+WHERE military IS NOT NULL OR building = 'military' OR landuse = 'military'
+ 
+UNION ALL
+ 
+SELECT osm_id, 'road' AS geom_type, landuse, military, building, name, operator,
+       ST_Buffer(way, 0.0009)::geometry(Polygon, 4326) AS geom
+FROM public.planet_osm_roads
+WHERE military IS NOT NULL OR building = 'military' OR landuse = 'military';
+    SQL
+
+    ActiveRecord::Base.connection_pool.with_connection do
+      ActiveRecord::Base.connection.execute(seed_query)
+    end
+  end
 end
