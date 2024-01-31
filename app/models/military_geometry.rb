@@ -50,7 +50,7 @@ class MilitaryGeometry < ApplicationRecord
             (SELECT geom
               FROM viirs_fire_events
               OFFSET #{part*10000}
-              LIMIT 1000) AS vfe
+              LIMIT 10000) AS vfe
             WHERE ST_Contains(mg.geom, vfe.geom)
         );
       SQL
