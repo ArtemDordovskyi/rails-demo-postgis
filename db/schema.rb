@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2024_01_30_150739) do
+ActiveRecord::Schema[7.1].define(version: 2024_02_01_075149) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "postgis"
@@ -24,6 +24,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_30_150739) do
     t.text "name"
     t.text "operator"
     t.geometry "geom", limit: {:srid=>4326, :type=>"st_polygon"}
+    t.index ["geom"], name: "index_military_geometries_on_geom", using: :gist
   end
 
   create_table "planet_osm_line", id: false, force: :cascade do |t|
@@ -96,6 +97,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_30_150739) do
     t.integer "z_order"
     t.float "way_area"
     t.geometry "way", limit: {:srid=>4326, :type=>"line_string"}
+    t.index ["way"], name: "index_planet_osm_line_on_way", using: :gist
     t.index ["way"], name: "planet_osm_line_way_idx", using: :gist
   end
 
@@ -169,6 +171,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_30_150739) do
     t.text "wood"
     t.integer "z_order"
     t.geometry "way", limit: {:srid=>4326, :type=>"st_point"}
+    t.index ["way"], name: "index_planet_osm_point_on_way", using: :gist
     t.index ["way"], name: "planet_osm_point_way_idx", using: :gist
   end
 
@@ -242,6 +245,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_30_150739) do
     t.integer "z_order"
     t.float "way_area"
     t.geometry "way", limit: {:srid=>4326, :type=>"geometry"}
+    t.index ["way"], name: "index_planet_osm_polygon_on_way", using: :gist
     t.index ["way"], name: "planet_osm_polygon_way_idx", using: :gist
   end
 
@@ -315,6 +319,7 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_30_150739) do
     t.integer "z_order"
     t.float "way_area"
     t.geometry "way", limit: {:srid=>4326, :type=>"line_string"}
+    t.index ["way"], name: "index_planet_osm_roads_on_way", using: :gist
     t.index ["way"], name: "planet_osm_roads_way_idx", using: :gist
   end
 
@@ -333,6 +338,23 @@ ActiveRecord::Schema[7.1].define(version: 2024_01_30_150739) do
     t.float "frp"
     t.text "daynight"
     t.virtual "geom", type: :geometry, limit: {:srid=>4326, :type=>"geometry"}, as: "st_makepoint(longitude, latitude)", stored: true
+    t.index ["geom"], name: "index_viirs_fire_events_on_geom", using: :gist
   end
 
+
+  create_view "military_fireds", sql_definition: <<-SQL
+      SELECT mg.osm_id,
+      mg.geom_type,
+      mg.landuse,
+      mg.military,
+      mg.building,
+      mg.name,
+      mg.operator,
+      mg.geom
+     FROM military_geometries mg
+    WHERE (EXISTS ( SELECT 1
+             FROM ( SELECT viirs_fire_events.geom
+                     FROM viirs_fire_events) vfe
+            WHERE st_contains(mg.geom, vfe.geom)));
+  SQL
 end

@@ -36,4 +36,4 @@
 /lib/tasks/*.csv
 *.zip
 /viirs-snpp
-
+.idea
