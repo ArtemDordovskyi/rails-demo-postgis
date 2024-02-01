@@ -76,23 +76,23 @@ SELECT osm_id, 'line' AS geom_type, landuse, military, building, name, operator,
        ST_Buffer(way, 0.0009)::geometry(Polygon, 4326) AS geom
 FROM public.planet_osm_line
 WHERE military IS NOT NULL OR building = 'military' OR landuse = 'military'
- 
+
 UNION ALL
- 
+
 SELECT osm_id, 'point' AS geom_type, landuse, military, building, name, operator,
        ST_Buffer(way, 0.0009)::geometry(Polygon, 4326) AS geom
 FROM public.planet_osm_point
 WHERE military IS NOT NULL OR building = 'military' OR landuse = 'military'
- 
+
 UNION ALL
- 
+
 SELECT osm_id, 'polygon' AS geom_type, landuse, military, building, name, operator,
        way::geometry(Polygon, 4326) AS geom
 FROM public.planet_osm_polygon
 WHERE military IS NOT NULL OR building = 'military' OR landuse = 'military'
- 
+
 UNION ALL
- 
+
 SELECT osm_id, 'road' AS geom_type, landuse, military, building, name, operator,
        ST_Buffer(way, 0.0009)::geometry(Polygon, 4326) AS geom
 FROM public.planet_osm_roads

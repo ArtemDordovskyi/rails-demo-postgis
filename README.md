@@ -33,8 +33,10 @@ bin/rake db:seed_viirs_fire_events
 
 ## Usage
 
-In process...
-
+Start server
+```bash
+bin/rails server
+```
 
 ## Contributing
 
